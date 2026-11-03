@@ -1,0 +1,21 @@
+\title "Probe-Riff"
+\subtitle "Eigenkomposition für TheKellerkinder"
+\tempo 110
+.
+\track "E-Gitarre"
+  \staff {tabs}
+  \instrument distortionguitar
+  \tuning (E4 B3 G3 D3 A2 E2)
+  (0.6 2.5 2.4).8 (0.6 2.5 2.4).8 r.8 (0.6 2.5 2.4).8 (3.6 5.5 5.4).4 (5.6 7.5 7.4).4 |
+  (0.6 2.5 2.4).8 (0.6 2.5 2.4).8 r.8 (0.6 2.5 2.4).8 (7.6 9.5 9.4).4 (5.6 7.5 7.4).4 |
+\track "Bass"
+  \staff {tabs}
+  \instrument electricbassfinger
+  \tuning (G2 D2 A1 E1)
+  0.4.8 0.4.8 r.8 0.4.8 3.4.4 5.4.4 |
+  0.4.8 0.4.8 r.8 0.4.8 7.4.4 5.4.4 |
+\track "Schlagzeug"
+  \instrument percussion
+  \clef neutral
+  (36 42).8 (42).8 (38 42).8 (42).8 (36 42).8 (36 42).8 (38 42).8 (42).8 |
+  (36 42).8 (42).8 (38 42).8 (42).8 (36 42).8 (36 42).8 (38 49).4 |
