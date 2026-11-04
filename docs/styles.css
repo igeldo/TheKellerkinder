@@ -1,0 +1,417 @@
+:root {
+  --bg: #f4f2ee;
+  --panel: #ffffff;
+  --ink: #1f1d1a;
+  --muted: #6b665e;
+  --line: #ddd8cf;
+  --accent: #c2410c;        /* Verstärker-Orange */
+  --accent-ink: #ffffff;
+  --mute: #6b7280;
+  --solo: #b45309;
+  --error: #b91c1c;
+  --ok: #15803d;
+  --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.4 var(--sans);
+}
+
+button, select, input { font: inherit; color: inherit; }
+
+button {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--muted); }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+select, input[type="text"] {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 6px;
+  padding: 5px 8px;
+}
+
+/* ---------- Kopfzeile ---------- */
+.topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  background: var(--ink); color: #fff;
+}
+.topbar button, .topbar select { background: #2c2925; border-color: #3d3934; color: #fff; }
+.topbar button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+.brand { font-weight: 700; letter-spacing: .02em; font-size: 16px; }
+.brand::before { content: "♪ "; color: var(--accent); }
+.spacer { flex: 1; }
+.song-title { color: #cfc8bd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw; }
+.field { display: inline-flex; align-items: center; gap: 6px; }
+.field > span { color: inherit; opacity: .75; }
+
+/* ---------- Hauptbereich ---------- */
+.layout {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  min-height: 0;
+}
+
+.sidebar {
+  border-right: 1px solid var(--line);
+  padding: 14px;
+  overflow: auto;
+  background: var(--panel);
+  width: 250px;
+}
+.sidebar h2, .editor h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 6px; color: var(--muted); }
+.hint { color: var(--muted); font-size: 12px; margin: 0 0 10px; }
+.hint.inline { margin: 0; }
+
+.track-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.track {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center; gap: 5px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.track-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.track button { padding: 2px 8px; font-weight: 700; font-size: 12px; }
+.track button.mute[aria-pressed="true"] { background: var(--mute); border-color: var(--mute); }
+.track button.solo[aria-pressed="true"] { background: var(--solo); border-color: var(--solo); }
+.track input[type="checkbox"] { accent-color: var(--accent); }
+
+.score-area { position: relative; min-width: 0; min-height: 0; }
+.score-wrap { position: absolute; inset: 0; overflow: auto; background: #fff; }
+#score { padding: 8px 0 40px; }
+.loading {
+  position: absolute; top: 12px; right: 16px; z-index: 5;
+  background: var(--ink); color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 12px;
+}
+.loading[hidden] { display: none; }
+
+/* alphaTab: Cursor und Auswahl */
+.at-cursor-bar { background: rgba(194, 65, 12, .08); }
+.at-cursor-beat { background: var(--accent); width: 3px; }
+.at-selection div { background: rgba(194, 65, 12, .18); }
+.at-highlight * { fill: var(--accent); stroke: var(--accent); }
+
+/* ---------- Editor ---------- */
+.editor {
+  width: min(520px, 42vw);
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  display: grid;
+  grid-template-rows: auto 1fr auto auto auto;
+  min-height: 0;
+  padding: 12px;
+  gap: 8px;
+}
+.editor[hidden] { display: none; }
+.editor-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.editor-head input { width: 60%; font-family: var(--mono); font-size: 12px; }
+#tex {
+  width: 100%; height: 100%; min-height: 200px;
+  resize: none;
+  font: 13px/1.5 var(--mono);
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: 10px;
+  tab-size: 2;
+  white-space: pre;
+  overflow: auto;
+}
+.diagnostics { font: 12px/1.45 var(--mono); max-height: 140px; overflow: auto; }
+.diagnostics .ok { color: var(--ok); }
+.diagnostics .err { color: var(--error); }
+.diagnostics .warn { color: var(--solo); }
+.editor-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ---------- Transportleiste ---------- */
+.transport {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+.time { font-family: var(--mono); min-width: 96px; }
+.toggle { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.toggle input { accent-color: var(--accent); }
+.status { margin-left: auto; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+  .sidebar { width: auto; border-right: 0; border-bottom: 1px solid var(--line); max-height: 30vh; }
+  .score-area { min-height: 50vh; }
+  .editor { width: auto; border-left: 0; border-top: 1px solid var(--line); }
+  .hint.inline { display: none; }
+}
+
+/* ---------- Drucken ---------- */
+.print-group { display: inline-flex; gap: 4px; }
+.print-group select { max-width: 170px; }
+
+/* Falls jemand Strg+P auf der Hauptseite drückt: nur die Noten drucken.
+   Besser ist der Knopf "Drucken" – er zeichnet alles vollständig im A4-Format neu. */
+@media print {
+  .topbar, .sidebar, .editor, .transport, .loading, .help { display: none !important; }
+  body, .layout { display: block; }
+  .score-wrap { position: static; overflow: visible; }
+}
+
+/* ---------- Hilfe ---------- */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+.help { position: fixed; inset: 0; z-index: 50; }
+.help[hidden] { display: none; }
+.help-backdrop { position: absolute; inset: 0; background: rgba(20, 18, 16, .45); }
+.help-panel {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: min(900px, 100vw);
+  background: var(--panel);
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  grid-template-rows: auto 1fr;
+  box-shadow: -12px 0 40px rgba(0, 0, 0, .25);
+}
+.help-head {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 16px;
+  background: var(--ink); color: #fff;
+}
+.help-tabs { display: flex; gap: 6px; }
+.help-tabs button, .help-close { background: #2c2925; border-color: #3d3934; color: #fff; }
+.help-tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); }
+.help-toc {
+  overflow: auto; padding: 14px 10px;
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.help-toc a {
+  color: var(--ink); text-decoration: none; font-size: 13px;
+  padding: 4px 8px; border-radius: 6px;
+}
+.help-toc a:hover { background: var(--bg); }
+.help-body { overflow: auto; padding: 8px 28px 48px; line-height: 1.6; }
+.help-body h1 { font-size: 24px; margin: 16px 0 8px; }
+.help-body h2 { font-size: 18px; margin: 28px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.help-body h3 { font-size: 15px; margin: 20px 0 6px; }
+.help-body hr { display: none; }
+.help-body a { color: var(--accent); }
+.help-body code { font-family: var(--mono); font-size: 12.5px; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+.help-body pre {
+  position: relative;
+  background: #1f1d1a; color: #f4f2ee;
+  padding: 12px 14px; border-radius: 8px; overflow: auto;
+}
+.help-body pre code { background: none; padding: 0; color: inherit; font-size: 13px; }
+.help-body pre.runnable { padding-bottom: 46px; }
+.help-body pre .try {
+  position: absolute; right: 10px; bottom: 8px;
+  background: var(--accent); border-color: var(--accent); color: #fff;
+  font-size: 12px; padding: 4px 10px;
+}
+.help-body table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; font-size: 13px; }
+.help-body th, .help-body td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+.help-body th { background: var(--bg); }
+.help-body code.try-inline { cursor: pointer; box-shadow: inset 0 -2px 0 rgba(194, 65, 12, .45); }
+.help-body code.try-inline:hover, .help-body code.try-inline:focus { background: rgba(194, 65, 12, .15); outline: none; }
+
+@media (max-width: 900px) {
+  .help-panel { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .help-toc { display: none; }
+  .print-group select { max-width: 120px; }
+}
+
+/* ---------- Beenden ---------- */
+.topbar button.quit { background: transparent; border-color: #8b2a10; color: #f3c1ae; }
+.topbar button.quit:hover { background: #8b2a10; color: #fff; }
+.ended {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center;
+  background: var(--ink); color: #fff;
+}
+.ended[hidden] { display: none; }
+.ended-box { text-align: center; max-width: 440px; padding: 24px; }
+.ended-box h1 { font-size: 28px; margin: 12px 0 8px; }
+.ended-box p { color: #cfc8bd; }
+.ended-box code { font-family: var(--mono); background: #2c2925; padding: 1px 6px; border-radius: 4px; }
+/* nach dem Beenden nur noch die Abschlussseite zeigen (sonst scheinen Cursor von alphaTab durch) */
+body.is-ended > :not(.ended) { display: none !important; }
+body.is-ended { display: block; }
+
+/* ---------- schmalere Bildschirme (z. B. iPad) ---------- */
+.topbar button, .brand, .field > span { white-space: nowrap; }
+.status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw; }
+@media (max-width: 1400px) {
+  .song-title { display: none; }          /* der Titel steht ohnehin über den Noten */
+  .hint.inline { display: none; }
+}
+@media (max-width: 900px) {
+  /* Hochformat: Spuren nebeneinander statt untereinander */
+  .track-list { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .sidebar .hint { display: none; }
+}
+
+/* ---------- Web-Fassung: Dialog "Meine Songs" ---------- */
+.songs-dialog { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; }
+.songs-dialog[hidden] { display: none; }
+.songs-backdrop { position: absolute; inset: 0; background: rgba(20, 18, 16, .45); }
+.songs-panel {
+  position: relative;
+  width: min(860px, 100%); max-height: 100%;
+  display: grid; grid-template-rows: auto 1fr auto;
+  background: var(--panel); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+}
+.songs-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: var(--ink); color: #fff;
+}
+.songs-head h2 { margin: 0; font-size: 16px; }
+.songs-sub { font-weight: 400; color: #cfc8bd; font-size: 13px; margin-left: 6px; }
+.songs-close { background: #2c2925; border-color: #3d3934; color: #fff; }
+.songs-body { overflow: auto; padding: 12px 16px; }
+.songs-intro { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.songs-intro code, .songs-empty code { font-family: var(--mono); background: var(--bg); padding: 0 4px; border-radius: 4px; }
+.songs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.songs-table th, .songs-table td { border-bottom: 1px solid var(--line); padding: 6px 6px; text-align: left; vertical-align: middle; }
+.songs-table th { color: var(--muted); font-weight: 600; }
+.songs-table input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+.songs-table button { padding: 3px 8px; font-size: 12px; }
+.songs-table button.link { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 600; text-align: left; }
+.songs-table button.link:hover { text-decoration: underline; }
+.row-actions { white-space: nowrap; text-align: right !important; }
+.row-actions button + button { margin-left: 4px; }
+button.danger { color: var(--error); }
+button.danger:hover:not(:disabled) { border-color: var(--error); }
+.songs-empty { color: var(--muted); }
+.songs-actions { display: flex; gap: 8px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--line); }
+
+/* "lokal" in der Songliste sichtbar machen */
+#song-select optgroup { font-style: normal; color: var(--muted); }
+
+/* alphaTab legt seine Cursor auf Ebene 1000 – Fenster und Abschlussseite müssen darüber liegen */
+.help { z-index: 2000; }
+.songs-dialog { z-index: 2100; }
+.ended { z-index: 3000; }
+.loading { z-index: 1500; }
+
+/* ---------- Menü "Herunterladen" ---------- */
+.menu { position: relative; }
+.menu > summary {
+  list-style: none; cursor: pointer; white-space: nowrap;
+  border: 1px solid #3d3934; background: #2c2925; color: #fff;
+  border-radius: 6px; padding: 6px 12px;
+}
+.menu > summary::-webkit-details-marker { display: none; }
+.menu > summary::after { content: " ▾"; opacity: .7; }
+.menu[open] > summary { border-color: var(--accent); }
+.menu-items {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 2200;
+  width: 300px; padding: 8px;
+  background: var(--panel); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+  display: grid; gap: 6px;
+}
+.menu-items button { text-align: left; background: var(--panel); color: var(--ink); border-color: var(--line); }
+.menu-items button:hover { border-color: var(--accent); }
+.menu-hint { margin: 2px 2px 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+
+/* ---------- Hinweis "wohin wird gespeichert" im Editor ---------- */
+.save-hint { margin: 0; line-height: 1.45; word-break: break-word; }
+.save-hint b { color: var(--ink); font-weight: 600; }
+
+/* Statusmeldungen mit Speicherort vollständig zeigen (umbrechen statt abschneiden) */
+.status { white-space: normal; overflow: visible; text-overflow: clip; max-width: 60vw; text-align: right; word-break: break-word; line-height: 1.35; }
+@media (max-width: 900px) { .status { max-width: 100%; text-align: left; margin-left: 0; } }
+
+/* Löschen-Knopf in der Kopfzeile */
+.topbar button.danger-top { color: #f3c1ae; }
+.topbar button.danger-top:hover:not(:disabled) { border-color: #b91c1c; background: #5c1a10; color: #fff; }
+
+/* Schalter Band-Klänge */
+.band-toggle { white-space: nowrap; }
+.band-toggle[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.band-toggle:disabled { opacity: .7; }
+
+/* ---------- Zoom (Regler "Zoom" unten): Leisten wachsen und schrumpfen mit den Noten ---------- */
+.topbar, .transport, .sidebar, .editor { zoom: var(--ui-zoom, 1); }
+
+/* ---------- Kopfzeile kompakt und immer einzeilig ---------- */
+.topbar {
+  flex-wrap: nowrap; gap: 6px; padding: 7px 10px;
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: thin;
+}
+.topbar > * { flex: 0 0 auto; }
+.topbar .spacer { flex: 1 1 0; min-width: 4px; }
+.topbar .song-title { flex: 0 1 auto; min-width: 0; }
+.topbar button, .menu > summary { padding: 4px 9px; font-size: 13px; }
+.topbar select { padding: 3px 6px; font-size: 13px; }
+.topbar .field { gap: 4px; }
+.topbar .field > span { font-size: 12px; }
+#song-select { max-width: 210px; }
+.print-group select { max-width: 150px; }
+.brand { font-size: 15px; }
+/* Passt die Zeile nicht, schaltet app.js (fitTopbar) stufenweise kompaktere Formen ein:
+   Stufe 1: ohne Beschriftung "Song"/"Ansicht", "Hilfe" und "Editor" statt der langen Namen
+   Stufe 2: nur das Notensymbol als Logo, schmalere Auswahllisten
+   Stufe 3: noch kleinere Abstände und Schrift. Reicht auch das nicht, lässt sich die Zeile seitlich wischen. */
+.topbar.fit-1 .field > span, .topbar.fit-1 .fit-long { display: none; }
+.topbar.fit-1 #song-select { max-width: 170px; }
+.topbar.fit-1 .print-group select { max-width: 125px; }
+.topbar.fit-2 .brand-name { display: none; }
+.topbar.fit-2 #song-select { max-width: 140px; }
+.topbar.fit-2 .print-group select { max-width: 105px; }
+.topbar.fit-3 { gap: 4px; padding: 6px 6px; }
+.topbar.fit-3 button, .topbar.fit-3 .menu > summary { padding: 3px 6px; font-size: 12px; }
+.topbar.fit-3 select { font-size: 12px; padding: 2px 4px; }
+.topbar.fit-3 #song-select { max-width: 120px; }
+/* Die Auswahl "Herunterladen" hängt an <body> und wird per Skript unter den Knopf gesetzt */
+.menu-items { position: fixed; top: 0; left: 0; }
+.menu-items[hidden] { display: none; }
+
+/* ---------- Transportleiste: Aufklapp-Regler statt Schieberegler ---------- */
+.transport { gap: 8px 10px; padding: 8px 12px; }
+.pop { display: inline-flex; }
+.pop-btn { white-space: nowrap; padding: 5px 10px; }
+.pop-btn output { font-family: var(--mono); font-size: 12px; margin-left: 2px; }
+.pop-btn[aria-expanded="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(194, 65, 12, .2); }
+.pop-btn.small { padding: 2px 6px; font-size: 12px; font-weight: 400; }
+.pop-btn.small output { font-size: 11px; }
+.pop-panel {
+  position: fixed; top: 0; left: 0; z-index: 2300;
+  width: 250px; padding: 10px 12px 12px;
+  background: var(--panel); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .25);
+  display: grid; gap: 8px;
+}
+.pop-panel[hidden] { display: none; }
+.pop-title { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pop-panel input[type="range"] { width: 100%; accent-color: var(--accent); margin: 4px 0; }
+.pop-row { display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 6px; }
+.pop-row button { padding: 6px 0; font-size: 14px; }
+.sidebar .track button.pop-btn { font-weight: 400; }
+
+/* Bereich wählen (Touch): der Finger markiert statt zu scrollen */
+.score-wrap.range-mode { touch-action: none; overflow: hidden; -webkit-user-select: none; user-select: none; outline: 3px solid var(--accent); outline-offset: -3px; }
+#btn-range[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
