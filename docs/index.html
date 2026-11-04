@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TheKellerkinder</title>
+  <link rel="stylesheet" href="styles.css?v=3d2a5bff33">
+  <!-- alphaTab: Notendarstellung, Tabulatur und Wiedergabe (MPL-2.0, https://alphatab.net) -->
+  <script src="vendor/alphatab/alphaTab.min.js"></script>
+  <!-- marked (Markdown → HTML für die Hilfe) wird erst beim Öffnen der Hilfe geladen, siehe help.js -->
+
+  <!-- Web-Fassung: installierbar (Home-Bildschirm) und offline nutzbar -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#1f1d1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Kellerkinder">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <meta name="kk-build" content="3d2a5bff33">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand" title="TheKellerkinder"><span class="brand-name">TheKellerkinder</span></div>
+  <label class="field">
+    <span>Song</span>
+    <select id="song-select" aria-label="Song auswählen"></select>
+  </label>
+  <button id="btn-delete" type="button" class="danger-top" disabled title="Ausgewählten Song löschen">Löschen</button>
+  <button id="btn-new" type="button" title="Neuen Song in alphaTex beginnen">Neu</button>
+  <button id="btn-open" type="button" title="Songdatei vom Rechner öffnen (.gp, .atex, MusicXML oder ZIP) – sie wird in die Songliste übernommen">Öffnen …</button>
+  <input id="open-input" type="file" multiple hidden
+         accept=".gp,.gpx,.gp3,.gp4,.gp5,.atex,.xml,.musicxml,.cap,.zip">
+  <details id="download-menu" class="menu">
+    <summary title="Aktuellen Song als Datei auf den Rechner herunterladen">Herunterladen</summary>
+    <div class="menu-items">
+      <button type="button" data-format="gp">Guitar Pro (.gp)</button>
+      <button type="button" data-format="atex">alphaTex-Text (.atex)</button>
+      <p class="menu-hint">Die Datei landet im <b>Download-Ordner des Browsers</b> (meist „Downloads“,
+        auf dem iPad: Dateien → Downloads). Die Songliste bleibt unverändert.
+        Zum Weiterarbeiten mit <b>Öffnen …</b> wieder laden.</p>
+    </div>
+  </details>
+  <span class="spacer"></span>
+  <span id="song-title" class="song-title"></span>
+  <div class="print-group">
+    <label class="field" title="Darstellung auf dem Bildschirm und beim Drucken">
+      <span>Ansicht</span>
+      <select id="view-mode" aria-label="Ansicht">
+        <option value="song">wie im Song</option>
+        <option value="tab">nur Tabulatur</option>
+        <option value="scoreTab">Noten + Tabulatur</option>
+        <option value="score">nur Noten</option>
+      </select>
+    </label>
+    <button id="btn-print" type="button" disabled title="Druckt die links angehakten Spuren in der gewählten Ansicht – z. B. nur die eigene Stimme">Drucken</button>
+  </div>
+  <button id="btn-help" type="button" title="Beschreibung der alphaTex-Syntax"><span class="fit-long">Syntax-</span>Hilfe</button>
+  <button id="btn-editor" type="button" aria-pressed="false" title="alphaTex-Editor ein- und ausblenden"><span class="fit-long">alphaTex-</span>Editor</button>
+  <button id="btn-quit" type="button" class="quit" title="TheKellerkinder beenden (Server herunterfahren)">Beenden</button>
+</header>
+
+<!-- wird nach dem Beenden über die ganze Seite gelegt -->
+<div id="ended" class="ended" hidden>
+  <div class="ended-box">
+    <div class="brand">TheKellerkinder</div>
+    <h1>Beendet</h1>
+    <p>Der Server ist heruntergefahren. Dieses Fenster kann geschlossen werden.</p>
+    <p class="hint">Neu starten: in IntelliJ „TheKellerkinder starten“ oder <code>java -jar TheKellerkinder.jar</code>.</p>
+  </div>
+</div>
+
+<!-- Hilfe: zeigt ALPHATEX.md und README.md aus dem Projekt (im JAR unter static/docs) -->
+<div id="help" class="help" hidden>
+  <div class="help-backdrop" data-close></div>
+  <section class="help-panel" role="dialog" aria-modal="true" aria-labelledby="help-heading">
+    <div class="help-head">
+      <h2 id="help-heading" class="visually-hidden">Hilfe</h2>
+      <div class="help-tabs" role="tablist">
+        <button type="button" role="tab" data-doc="ALPHATEX.md" aria-selected="true">alphaTex-Syntax</button>
+        <button type="button" role="tab" data-doc="README.md" aria-selected="false">Anleitung</button>
+      </div>
+      <button type="button" class="help-close" data-close aria-label="Hilfe schließen">✕</button>
+    </div>
+    <div id="help-toc" class="help-toc" aria-label="Inhalt"></div>
+    <article id="help-body" class="help-body"></article>
+  </section>
+</div>
+
+<main class="layout">
+  <aside class="sidebar" aria-label="Spuren">
+    <h2>Spuren</h2>
+    <p class="hint">Häkchen: Spur anzeigen<br>M: stumm &nbsp;·&nbsp; S: nur diese Spur</p>
+    <ul id="track-list" class="track-list"></ul>
+  </aside>
+
+  <section class="score-area">
+    <div id="loading" class="loading">Lade …</div>
+    <div id="score-wrap" class="score-wrap">
+      <div id="score"></div>
+    </div>
+  </section>
+
+  <aside id="editor" class="editor" hidden aria-label="alphaTex-Editor">
+    <div class="editor-head">
+      <h2>alphaTex</h2>
+      <input id="file-name" type="text" value="mein-song.atex" aria-label="Dateiname" spellcheck="false">
+    </div>
+    <textarea id="tex" spellcheck="false" aria-label="alphaTex-Quelltext"></textarea>
+    <div id="diagnostics" class="diagnostics" role="status"></div>
+    <div class="editor-actions">
+      <button id="btn-from-score" type="button" title="Den gerade geladenen Song als alphaTex anzeigen">Song → Text</button>
+      <button id="btn-save-tex" type="button" class="primary" title="Text unter dem Dateinamen oben in die Songliste speichern">In Songliste speichern</button>
+    </div>
+    <p id="save-hint" class="hint save-hint">Speichert in den Ordner <code>songs/</code>. Als Datei auf den Rechner: oben <b>Herunterladen</b>.</p>
+  </aside>
+</main>
+
+<footer class="transport" aria-label="Wiedergabe">
+  <button id="btn-play" type="button" class="primary" disabled>▶ Abspielen</button>
+  <button id="btn-stop" type="button" disabled>■ Stopp</button>
+  <span id="time" class="time">0:00 / 0:00</span>
+
+  <!-- Aufklapp-Regler: kleiner Knopf mit Wert, ein Klick öffnet den Schieberegler -->
+  <div class="pop">
+    <button type="button" class="pop-btn" aria-expanded="false" title="Wiedergabe-Tempo ändern">Tempo <output id="speed-out">100 %</output></button>
+    <div class="pop-panel" hidden role="dialog" aria-label="Tempo">
+      <div class="pop-title">Tempo</div>
+      <input id="speed" type="range" min="25" max="150" step="5" value="100" aria-label="Tempo in Prozent">
+      <div class="pop-row"><button type="button" data-step="-5" aria-label="langsamer">−</button><button type="button" data-reset="100">100 %</button><button type="button" data-step="5" aria-label="schneller">+</button></div>
+    </div>
+  </div>
+  <div class="pop">
+    <button type="button" class="pop-btn" aria-expanded="false" title="Noten und Bedienleisten vergrößern oder verkleinern">Zoom <output id="zoom-out">100 %</output></button>
+    <div class="pop-panel" hidden role="dialog" aria-label="Zoom">
+      <div class="pop-title">Zoom (Noten und Leisten)</div>
+      <input id="zoom" type="range" min="50" max="150" step="5" value="100" aria-label="Zoom in Prozent">
+      <div class="pop-row"><button type="button" data-step="-10" aria-label="kleiner">−</button><button type="button" data-reset="100">100 %</button><button type="button" data-step="10" aria-label="größer">+</button></div>
+    </div>
+  </div>
+
+  <label class="toggle"><input id="chk-metronome" type="checkbox"> Metronom</label>
+  <label class="toggle"><input id="chk-countin" type="checkbox"> Einzähler</label>
+  <label class="toggle"><input id="chk-loop" type="checkbox"> Schleife</label>
+  <button id="btn-range" type="button" aria-pressed="false" title="Bereich auf dem Touchbildschirm wählen: mit dem Finger über die Takte ziehen – oder ersten und letzten Takt nacheinander antippen">Bereich wählen</button>
+  <button id="btn-clear-range" type="button" title="Markierten Bereich aufheben">Bereich aufheben</button>
+  <button id="btn-band" type="button" class="band-toggle" aria-pressed="false" disabled>Band-Klänge</button>
+  <span class="hint inline">Tipp: Takte mit der Maus markieren (iPad: „Bereich wählen“), dann Schleife einschalten.</span>
+  <span id="status" class="status" role="status"></span>
+</footer>
+
+<script src="zip.js?v=3d2a5bff33"></script>
+<script src="web-adapter.js?v=3d2a5bff33"></script>
+<script src="app.js?v=3d2a5bff33"></script>
+<script src="help.js?v=3d2a5bff33"></script>
+</body>
+</html>
