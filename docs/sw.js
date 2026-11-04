@@ -14,7 +14,7 @@
  */
 'use strict';
 
-const CACHE_VERSION = 'thekellerkinder-de86abce00be';
+const CACHE_VERSION = 'thekellerkinder-bcc77ec3237e';
 const FILES = [
   "./",
   "app.js",

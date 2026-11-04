@@ -413,7 +413,7 @@ button.danger:hover:not(:disabled) { border-color: var(--error); }
 .sidebar .track button.pop-btn { font-weight: 400; }
 
 /* Bereich wählen (Touch): der Finger markiert statt zu scrollen */
-.score-wrap.range-mode { touch-action: none; overflow: hidden; -webkit-user-select: none; user-select: none; outline: 3px solid var(--accent); outline-offset: -3px; }
+.score-wrap.range-mode { outline: 3px solid var(--accent); outline-offset: -3px; }
 #btn-range[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
 
 /* Versionsnummer: unscheinbar ganz rechts unten */
@@ -435,3 +435,13 @@ button.danger:hover:not(:disabled) { border-color: var(--error); }
 #status.status.show { opacity: 1; transform: none; pointer-events: auto; }
 #status.status.error { background: var(--error); }
 .app-version { margin-left: 2px; align-self: center; }
+
+/* Noten nie als Text markieren (iPad: blaue Markierung beim langen Drücken) */
+#score, .score-wrap { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.range-overlay {
+  position: absolute; inset: 0; z-index: 1001;          /* über dem Cursor von alphaTab (1000) */
+  background: transparent; cursor: crosshair;
+  touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.range-overlay[hidden] { display: none; }

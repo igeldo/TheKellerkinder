@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TheKellerkinder</title>
-  <link rel="stylesheet" href="styles.css?v=94e1efeab1">
+  <link rel="stylesheet" href="styles.css?v=d688b5a29a">
   <!-- alphaTab: Notendarstellung, Tabulatur und Wiedergabe (MPL-2.0, https://alphatab.net) -->
   <script src="vendor/alphatab/alphaTab.min.js"></script>
   <!-- marked (Markdown → HTML für die Hilfe) wird erst beim Öffnen der Hilfe geladen, siehe help.js -->
@@ -18,7 +18,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <meta name="kk-build" content="94e1efeab1">
+  <meta name="kk-build" content="d688b5a29a">
 </head>
 <body>
 <header class="topbar">
@@ -100,6 +100,8 @@
     <div id="score-wrap" class="score-wrap">
       <div id="score"></div>
     </div>
+    <!-- im Bereichsmodus: fängt Finger und Maus ab, damit nicht gescrollt oder Text markiert wird -->
+    <div id="range-overlay" class="range-overlay" hidden></div>
   </section>
 
   <aside id="editor" class="editor" hidden aria-label="alphaTex-Editor">
@@ -146,15 +148,15 @@
   <button id="btn-range" type="button" aria-pressed="false" title="Bereich auf dem Touchbildschirm wählen: mit dem Finger über die Takte ziehen – oder ersten und letzten Takt nacheinander antippen">Bereich wählen</button>
   <button id="btn-clear-range" type="button" title="Markierten Bereich aufheben">Bereich aufheben</button>
   <button id="btn-band" type="button" class="band-toggle" aria-pressed="false" disabled>Band-Klänge</button>
-  <span id="app-version" class="app-version">v1.2</span>
+  <span id="app-version" class="app-version">v1.3</span>
 </footer>
 
 <!-- Meldungen (z. B. wohin gespeichert wurde) erscheinen kurz unten rechts und verschwinden wieder -->
 <div id="status" class="status" role="status" title="Antippen zum Schließen"></div>
 
-<script src="zip.js?v=94e1efeab1"></script>
-<script src="web-adapter.js?v=94e1efeab1"></script>
-<script src="app.js?v=94e1efeab1"></script>
-<script src="help.js?v=94e1efeab1"></script>
+<script src="zip.js?v=d688b5a29a"></script>
+<script src="web-adapter.js?v=d688b5a29a"></script>
+<script src="app.js?v=d688b5a29a"></script>
+<script src="help.js?v=d688b5a29a"></script>
 </body>
 </html>

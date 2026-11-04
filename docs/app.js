@@ -179,7 +179,7 @@ window.addEventListener('load', fitTopbar);
 // Versionsanzeige unten rechts; in der Web-Fassung zeigt der Tooltip zusätzlich die Baunummer
 {
   const build = document.querySelector('meta[name="kk-build"]')?.content;
-  $('app-version').title = build ? `TheKellerkinder v1.2 · Build ${build}` : 'TheKellerkinder v1.2';
+  $('app-version').title = build ? `TheKellerkinder v1.3 · Build ${build}` : 'TheKellerkinder v1.3';
 }
 
 // ====================================================================== 1. alphaTab einrichten
@@ -449,6 +449,7 @@ function showScore(score) {
 function buildTrackList(score) {
   el.trackList.replaceChildren();
   closePop();
+  armedBeat = null;
   document.querySelectorAll('.pop-panel[data-track-pop]').forEach((p) => p.remove());   // Regler des alten Songs
   score.tracks.forEach((track, i) => {
     const li = document.createElement('li');
@@ -560,7 +561,6 @@ const btnRange = $('btn-range');
 let rangeMode = false;
 let rangeFirst = null;      // erster Takt (Schlag), solange der zweite noch fehlt
 let rangeDrag = null;       // { start, moved, x, y, last }
-let lastTouchAt = 0;        // Zeitpunkt der letzten Fingerberührung
 
 function setRangeMode(on) {
   rangeMode = on;
@@ -568,6 +568,7 @@ function setRangeMode(on) {
   rangeDrag = null;
   btnRange.setAttribute('aria-pressed', String(on));
   el.scoreWrap.classList.toggle('range-mode', on);
+  rangeOverlay.hidden = !on;
   if (on) setStatus('Bereich wählen: mit dem Finger über die Takte ziehen – oder ersten und letzten Takt antippen.');
 }
 btnRange.addEventListener('click', () => setRangeMode(!rangeMode));
@@ -607,43 +608,32 @@ function finishRange(a, b) {
 }
 
 /*
- * Fingerbewegung über Touch-Ereignisse (nicht Pointer-Ereignisse): Safari auf dem iPad bricht Pointer-
- * Ereignisse ab (pointercancel), sobald es ein Wischen als Scrollen deutet. Ein touchmove mit
- * preventDefault() (passive: false) verhindert das Scrollen zuverlässig.
+ * Im Bereichsmodus liegt eine durchsichtige Fläche über den Noten (#range-overlay). Alle Berührungen
+ * landen auf ihr statt auf den Noten: Safari kann dann weder scrollen noch Text markieren (blaue
+ * Markierung) noch den Startstrich versetzen. Welcher Takt unter dem Finger liegt, wird aus der
+ * Position berechnet. Finger: Touch-Ereignisse (zuverlässig in Safari), Maus: Mausereignisse.
  */
-function touchPoint(e) { return (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || null; }
+const rangeOverlay = $('range-overlay');
 
-el.scoreWrap.addEventListener('touchstart', (e) => {
-  if (!rangeMode || e.touches.length !== 1) return;
-  e.preventDefault(); e.stopPropagation();   // kein Scrollen, kein Startstrich-Sprung durch alphaTab
-  lastTouchAt = Date.now();
-  const t = touchPoint(e);
-  const beat = beatAt(t);                    // kann null sein (zwischen den Zeilen) – dann zählt der erste Takt beim Ziehen
-  rangeDrag = { start: beat, moved: false, x: t.clientX, y: t.clientY, last: beat };
+function rangeDown(p) {
+  const beat = beatAt(p);                    // kann null sein (zwischen den Zeilen) – dann zählt der erste Takt beim Ziehen
+  rangeDrag = { start: beat, moved: false, x: p.clientX, y: p.clientY, last: beat };
   if (beat) markBars(rangeFirst || beat, beat, false);
-}, { capture: true, passive: false });
-
-el.scoreWrap.addEventListener('touchmove', (e) => {
-  if (!rangeMode) return;
-  e.preventDefault(); e.stopPropagation();
+}
+function rangeMove(p) {
   if (!rangeDrag) return;
-  const t = touchPoint(e);
-  if (Math.hypot(t.clientX - rangeDrag.x, t.clientY - rangeDrag.y) > 12) rangeDrag.moved = true;
-  const beat = beatAt(t);
+  if (Math.hypot(p.clientX - rangeDrag.x, p.clientY - rangeDrag.y) > 12) rangeDrag.moved = true;
+  autoScroll(p);
+  const beat = beatAt(p);
   if (beat) {
     if (!rangeDrag.start) rangeDrag.start = beat;
     rangeDrag.last = beat;
     markBars(rangeFirst && !rangeDrag.moved ? rangeFirst : rangeDrag.start, beat, false);
   }
-}, { capture: true, passive: false });
-
-el.scoreWrap.addEventListener('touchend', (e) => {
-  if (!rangeMode) return;
-  e.preventDefault(); e.stopPropagation();
-  lastTouchAt = Date.now();
+}
+function rangeUp(p) {
   if (!rangeDrag) return;
-  const t = touchPoint(e);
-  const end = (t && beatAt(t)) || rangeDrag.last || rangeDrag.start;
+  const end = (p && beatAt(p)) || rangeDrag.last || rangeDrag.start;
   const { start, moved } = rangeDrag;
   rangeDrag = null;
   if (!start || !end) return;                // nur zwischen den Zeilen getippt
@@ -655,20 +645,81 @@ el.scoreWrap.addEventListener('touchend', (e) => {
   } else {
     finishRange(rangeFirst, start);          // zweiter Tipp: fertig
   }
-}, { capture: true, passive: false });
+}
+/** beim Ziehen an den oberen/unteren Rand: Noten weiterschieben (lange Songs) */
+function autoScroll(p) {
+  const r = el.scoreWrap.getBoundingClientRect();
+  if (p.clientY > r.bottom - 40) el.scoreWrap.scrollTop += 20;
+  else if (p.clientY < r.top + 40) el.scoreWrap.scrollTop -= 20;
+}
 
-el.scoreWrap.addEventListener('touchcancel', () => {
-  if (!rangeMode || !rangeDrag) return;
+const touchPoint = (e) => (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || null;
+const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
+rangeOverlay.addEventListener('touchstart', (e) => { stop(e); if (e.touches.length === 1) rangeDown(touchPoint(e)); }, { passive: false });
+rangeOverlay.addEventListener('touchmove', (e) => { stop(e); rangeMove(touchPoint(e)); }, { passive: false });
+rangeOverlay.addEventListener('touchend', (e) => { stop(e); rangeUp(touchPoint(e)); }, { passive: false });
+rangeOverlay.addEventListener('touchcancel', () => {
+  if (!rangeDrag) return;
   const { start, last, moved } = rangeDrag;  // abgebrochen: das bis dahin Gezogene übernehmen
   rangeDrag = null;
   if (moved && start && last) finishRange(start, last);
-}, true);
-// alphaTab hört auf Mausereignisse – die beim Tippen zusätzlich erzeugten im Bereichsmodus abfangen
-['pointerdown', 'pointermove', 'pointerup', 'mousedown', 'mousemove', 'mouseup', 'click'].forEach((t) => el.scoreWrap.addEventListener(t, (e) => {
-  if (!rangeMode) return;
-  const vomFinger = e.pointerType ? e.pointerType !== 'mouse' : Date.now() - lastTouchAt < 1000;
-  if (vomFinger) { e.stopPropagation(); e.preventDefault(); }
-}, true));
+});
+rangeOverlay.addEventListener('mousedown', (e) => { stop(e); rangeDown(e); });
+rangeOverlay.addEventListener('mousemove', (e) => { if (rangeDrag) { stop(e); rangeMove(e); } });
+rangeOverlay.addEventListener('mouseup', (e) => { stop(e); rangeUp(e); });
+rangeOverlay.addEventListener('click', stop);
+rangeOverlay.addEventListener('contextmenu', stop);
+/*
+ * Ohne Knopf: Ein Tipp auf einen Takt setzt wie gewohnt den Startstrich (der Takt wird orange). Legt man
+ * danach den Finger auf GENAU DIESEN Takt und zieht, wird ein Bereich markiert statt gescrollt.
+ * Ein Wischen, das woanders beginnt, scrollt wie bisher.
+ */
+let armedBeat = null;       // zuletzt angetippter Takt
+let touchInfo = null;       // { x, y, t, drag }
+const sameBar = (a, b) => a && b && a.voice.bar.masterBar.index === b.voice.bar.masterBar.index;
+el.scoreWrap.addEventListener('touchstart', (e) => {
+  if (rangeMode || e.touches.length !== 1) { touchInfo = null; return; }
+  const t = touchPoint(e);
+  const beat = beatAt(t);
+  touchInfo = { x: t.clientX, y: t.clientY, t: Date.now(), drag: false };
+  if (armedBeat && sameBar(beat, armedBeat)) {
+    e.preventDefault();                      // nicht scrollen – ab hier wird markiert
+    touchInfo.drag = true;
+    rangeFirst = null;
+    rangeDrag = { start: armedBeat, moved: false, x: t.clientX, y: t.clientY, last: armedBeat };
+  }
+}, { capture: true, passive: false });
+el.scoreWrap.addEventListener('touchmove', (e) => {
+  if (!touchInfo || !touchInfo.drag) return;
+  e.preventDefault();
+  rangeMove(touchPoint(e));
+}, { capture: true, passive: false });
+el.scoreWrap.addEventListener('touchend', (e) => {
+  if (!touchInfo) return;
+  const t = touchPoint(e);
+  const info = touchInfo;
+  touchInfo = null;
+  if (info.drag) {
+    e.preventDefault();
+    if (rangeDrag && rangeDrag.moved) {
+      const end = (t && beatAt(t)) || rangeDrag.last;
+      const start = rangeDrag.start;
+      rangeDrag = null;
+      finishRange(start, end);
+    } else {
+      rangeDrag = null;                      // nur noch einmal auf den Takt getippt: nichts ändern
+    }
+    return;
+  }
+  // kurzer Tipp ohne Bewegung: diesen Takt merken (alphaTab setzt dort den Startstrich)
+  if (t && Date.now() - info.t < 600 && Math.hypot(t.clientX - info.x, t.clientY - info.y) < 10) {
+    armedBeat = beatAt(t) || armedBeat;
+  }
+}, { capture: true, passive: false });
+el.scoreWrap.addEventListener('touchcancel', () => { touchInfo = null; rangeDrag = null; }, true);
+
+// Mausrad/Trackpad scrollt die Noten auch im Bereichsmodus
+rangeOverlay.addEventListener('wheel', (e) => { el.scoreWrap.scrollTop += e.deltaY; el.scoreWrap.scrollLeft += e.deltaX; e.preventDefault(); }, { passive: false });
 
 // Leertaste startet/pausiert, außer beim Tippen im Editor
 document.addEventListener('keydown', (e) => {

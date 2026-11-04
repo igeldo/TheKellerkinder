@@ -39,7 +39,7 @@ Seite löschen (danach sind auch eigene Songs auf diesem Gerät weg – vorher g
 | Meine Songs | lokale Songs öffnen, herunterladen, löschen, **für GitHub exportieren** und **importieren** |
 | Spuren | anzeigen/ausblenden, **M** = stumm (zum Mitspielen), **S** = solo, **🔊** = Lautstärke (Knopf antippen, Regler klappt auf; Zahl erscheint, wenn nicht 100 %) |
 | Wiedergabe | **Tempo** 25–150 % (Knopf antippen, Regler klappt auf), Metronom, Einzähler, **Schleife** über einen markierten Bereich |
-| Bereich markieren | mit der Maus über die Takte ziehen; **iPad/Touch:** erst **Bereich wählen** antippen, dann mit dem Finger über die Takte ziehen – oder ersten und letzten Takt nacheinander antippen. Danach scrollt der Finger wieder normal. |
+| Bereich markieren | mit der Maus über die Takte ziehen; **iPad/Touch:** ersten Takt antippen (er wird orange), dann den Finger auf diesen Takt legen und bis zum letzten Takt ziehen – oder **Bereich wählen** antippen, dann mit dem Finger über die Takte ziehen – oder ersten und letzten Takt nacheinander antippen. Danach scrollt der Finger wieder normal. |
 | Zoom | Knopf **Zoom** unten: Noten **und** Bedienleisten 50–150 % (iPad startet mit 80 %, am Rechner 100 %); die Einstellung bleibt gespeichert. Die Kopfzeile bleibt einzeilig: wird es eng, werden die Knöpfe kürzer („Hilfe“, „Editor“); notfalls lässt sie sich seitlich wischen. |
 | Ansicht & Drucken | wie im Song, nur Tabulatur, Noten + Tabulatur, nur Noten; Drucken bzw. „Als PDF sichern“ |
 | alphaTex-Editor | Songs als Text schreiben, mit Live-Vorschau und Fehlermeldungen; **In Songliste speichern** legt den Text im Speicher dieses Browsers ab |
